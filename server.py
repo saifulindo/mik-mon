@@ -4,8 +4,10 @@
 from flask import Flask, jsonify
 from librouteros import connect
 from librouteros.exceptions import TrapError
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Fungsi untuk terhubung dengan Mikrotik
 def connect_to_mikrotik():
