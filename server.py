@@ -41,5 +41,22 @@ def get_interfaces():
     finally:
         api.close()  # Pastikan koneksi tertutup setelah selesai
 
+@app.route('/api/dhcp-clients', methods=['GET'])
+def get_dhcp_clients():
+    api = connect_to_mikrotik()
+    if api is None:
+        return jsonify({"error": "Could not connect to Mikrotik"}), 500
+
+    try:
+        dhcp_clients_data = []
+        # Ambil data dari DHCP Client Mikrotik
+        for client in api('/ip/dhcp-client/print'):
+            dhcp_clients_data.append(client)
+        return jsonify(dhcp_clients_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        api.close()  # Pastikan koneksi tertutup setelah selesai
+
 if __name__ == '__main__':
     app.run(debug=True)
