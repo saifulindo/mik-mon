@@ -213,24 +213,41 @@ def add_ip_address():
     finally:
         api.close()  # Menutup koneksi
 
-# @app.route('/api/address/remove_by_id/<string:id>', methods=['DELETE'])
-# def remove_ip_address_by_id(id):
-#     api = connect_to_mikrotik()
-#     if api is None:
-#         return jsonify({"error": "Could not connect to Mikrotik"}), 500
 
-#     try:
-#         # Hapus IP address berdasarkan .id
-#         print(f"Removing IP address with .id: {id}")
-#         api(cmd='/ip/address/remove', **{'.id': id})
+@app.route('/api/address/<id>', methods=['DELETE'])
+def delete_ip_address(id):
+    api = connect_to_mikrotik()
+    if api is None:
+        return jsonify({"error": "Could not connect to Mikrotik"}), 500
 
-#         return jsonify({"message": f"IP address with .id {id} removed successfully"}), 200
+    try:
+        # Ambil daftar IP addresses dari Mikrotik
+        addresses = list(api('/ip/address/print'))
+        print("Daftar alamat IP yang tersedia:", addresses)  # Menampilkan daftar IP yang ada
 
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+        # Cari IP address berdasarkan ID yang diberikan
+        ip_to_delete = None
+        for address in addresses:
+            if address.get('.id') == id:
+                ip_to_delete = address
+                break
 
-#     finally:
-#         api.close()
+        if not ip_to_delete:
+            return jsonify({"error": "IP address not found"}), 404
+
+        print(f"IP address yang ditemukan untuk dihapus: {ip_to_delete}")  # Menampilkan IP yang akan dihapus
+
+        # Hapus IP address berdasarkan .id
+        response = list(api('/ip/address/remove', **{'.id': id}))  # Memaksa evaluasi generator dengan list()
+        print(f"Respons setelah penghapusan: {response}")  # Log respons setelah penghapusan
+
+        return jsonify({"message": f"IP address with .id {id} removed successfully"}), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Log error jika ada
+        return jsonify({"error": str(e)}), 500
+    finally:
+        api.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
